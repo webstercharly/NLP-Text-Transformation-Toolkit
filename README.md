@@ -10,6 +10,7 @@ The NLP Text Transformation Toolkit offers a suite of Python scripts designed to
 - **Coherence Enhancement:** Use GPT-2 and BERT to ensure logical flow and coherence across sentences and paragraphs.
 - **Idiom and Phrasal Verb Preservation:** Detect and preserve idiomatic expressions and phrasal verbs, retaining the text's nuanced meaning.
 - **Named Entity Recognition:** Identify and retain named entities to preserve factual accuracy during transformations.
+- **Fine-Tuned Text Rephrasing**: Fine-tune the BART model on custom data, providing more tailored and contextually appropriate text transformations.
 
 ## Getting Started
 1. Clone this repository to your local machine.
