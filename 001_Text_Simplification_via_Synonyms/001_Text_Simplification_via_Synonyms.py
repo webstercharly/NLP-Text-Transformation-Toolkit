@@ -20,7 +20,18 @@ def get_simpler_word(word):
     if response.status_code == 200:
         synonyms_data = response.json()
         if synonyms_data:
-            simpler_synonyms = [syn['word'] for syn in synonyms_data if 'score' in syn and int(syn['score']) >= 1000]
+            # Filter for simpler synonyms using frequency data (f tag)
+            # Higher frequency = more common/simpler word
+            simpler_synonyms = []
+            for syn in synonyms_data:
+                if 'tags' in syn:
+                    # Look for frequency tag (format: 'f:XX.XX')
+                    freq_tags = [tag for tag in syn['tags'] if tag.startswith('f:')]
+                    if freq_tags:
+                        freq = float(freq_tags[0].split(':')[1])
+                        # Accept words with higher frequency (more common)
+                        if freq >= 10.0:
+                            simpler_synonyms.append(syn['word'])
             if simpler_synonyms:
                 return random.choice(simpler_synonyms)
     return word

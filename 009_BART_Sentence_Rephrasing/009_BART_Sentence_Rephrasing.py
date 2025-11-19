@@ -9,10 +9,23 @@ from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize
 from transformers import BartForConditionalGeneration, BartTokenizer
 
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('wordnet')
-nltk.download('stopwords')
+# Download NLTK data with quiet flag
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
+try:
+    nltk.data.find('taggers/averaged_perceptron_tagger')
+except LookupError:
+    nltk.download('averaged_perceptron_tagger', quiet=True)
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet', quiet=True)
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords', quiet=True)
 
 word_vectors = KeyedVectors.load_word2vec_format('./wiki-news-300d-1M.vec', binary=False)
 
@@ -37,14 +50,14 @@ def calculate_similarity(word1, word2):
     else:
         return 0.0
 
-def replacement_prob(word, freq, importance):
+def replacement_prob(word, freq, importance, word_freq_len):
     if word.lower() in stop_words:
         return 0.1
 
-    prob = importance * (1 - freq / len(word_freq))
+    prob = importance * (1 - freq / word_freq_len)
     return min(prob, 0.9)
 
-def replace_with_synonyms(text_chunk):
+def replace_with_synonyms(text_chunk, word_freq):
     words = nltk.word_tokenize(text_chunk)
     pos_tags = nltk.pos_tag(words)
     modified_words = []
@@ -55,7 +68,7 @@ def replace_with_synonyms(text_chunk):
         else:
             freq = word_freq[word.lower()]
             importance = freq / len(word_freq)
-            if random.random() < replacement_prob(word, freq, importance):
+            if random.random() < replacement_prob(word, freq, importance, len(word_freq)):
                 synonyms = get_synonyms(word, pos[0].lower())
                 if synonyms:
                     top_synonyms = sorted(synonyms, key=lambda x: calculate_similarity(word, x), reverse=True)[:5]
@@ -88,12 +101,11 @@ def main():
         print("Original text:")
         print(text)
 
-        global word_freq
         word_freq = nltk.FreqDist(nltk.word_tokenize(text.lower()))
 
         modified_sentences = []
         for sentence in sent_tokenize(text):
-            modified_sentence = replace_with_synonyms(sentence)
+            modified_sentence = replace_with_synonyms(sentence, word_freq)
 
             input_ids = bart_tokenizer.encode(modified_sentence, return_tensors='pt')
             output_ids = bart_model.generate(input_ids, max_length=len(input_ids[0])+50, num_beams=4, early_stopping=True)

@@ -10,12 +10,31 @@ from nltk.tag import pos_tag
 from nltk.chunk import ne_chunk
 import requests
 
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('wordnet')
-nltk.download('stopwords')
-nltk.download('maxent_ne_chunker')
-nltk.download('words')
+# Download NLTK data with quiet flag
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
+try:
+    nltk.data.find('taggers/averaged_perceptron_tagger')
+except LookupError:
+    nltk.download('averaged_perceptron_tagger', quiet=True)
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet', quiet=True)
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords', quiet=True)
+try:
+    nltk.data.find('chunkers/maxent_ne_chunker')
+except LookupError:
+    nltk.download('maxent_ne_chunker', quiet=True)
+try:
+    nltk.data.find('corpora/words')
+except LookupError:
+    nltk.download('words', quiet=True)
 
 word_vectors = KeyedVectors.load_word2vec_format('./wiki-news-300d-1M.vec', binary=False)
 
@@ -49,19 +68,22 @@ def is_proper_noun_or_named_entity(word, pos):
 
     named_entities = ne_chunk(pos_tag([word]))
     for chunk in named_entities:
-        if hasattr(chunk, 'label') and chunk.label() == 'NE':
+        # Check if chunk is a named entity (has label attribute and it's not just a tuple)
+        if hasattr(chunk, 'label'):
+            # NLTK returns labels like 'PERSON', 'ORGANIZATION', 'GPE', etc.
+            # Any labeled chunk is a named entity
             return True
 
     return False
 
-def replacement_prob(word, freq, importance):
+def replacement_prob(word, freq, importance, word_freq_len):
     if word.lower() in stop_words:
         return 0.1
 
-    prob = importance * (1 - freq / len(word_freq))
+    prob = importance * (1 - freq / word_freq_len)
     return min(prob, 0.9)
 
-def replace_with_synonyms(text_chunk):
+def replace_with_synonyms(text_chunk, word_freq):
     words = nltk.word_tokenize(text_chunk)
     pos_tags = nltk.pos_tag(words)
     modified_words = []
@@ -72,7 +94,7 @@ def replace_with_synonyms(text_chunk):
         else:
             freq = word_freq[word.lower()]
             importance = freq / len(word_freq)
-            if random.random() < replacement_prob(word, freq, importance):
+            if random.random() < replacement_prob(word, freq, importance, len(word_freq)):
                 synonyms = get_synonyms(word, pos[0].lower())
                 related_words = get_related_words(word)
                 replacements = synonyms + related_words
@@ -107,10 +129,9 @@ def main():
         print("Original text:")
         print(text)
 
-        global word_freq
         word_freq = nltk.FreqDist(nltk.word_tokenize(text.lower()))
 
-        modified_text = replace_with_synonyms(text)
+        modified_text = replace_with_synonyms(text, word_freq)
         modified_text = post_process(modified_text)
 
         print("\nModified text:")

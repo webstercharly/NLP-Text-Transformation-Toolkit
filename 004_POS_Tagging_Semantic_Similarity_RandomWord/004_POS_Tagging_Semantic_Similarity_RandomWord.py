@@ -6,9 +6,19 @@ import nltk
 from nltk.corpus import wordnet
 from gensim.models import KeyedVectors
 
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('wordnet')
+# Download NLTK data with quiet flag
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
+try:
+    nltk.data.find('taggers/averaged_perceptron_tagger')
+except LookupError:
+    nltk.download('averaged_perceptron_tagger', quiet=True)
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet', quiet=True)
 
 word_vectors = KeyedVectors.load_word2vec_format('./wiki-news-300d-1M.vec', binary=False)
 
@@ -52,19 +62,6 @@ def replace_with_synonyms(text_chunk, replacement_prob):
     modified_text = ' '.join(modified_words)
     return modified_text
 
-def vary_word_order(text):
-    sentences = nltk.sent_tokenize(text)
-    modified_sentences = []
-
-    for sentence in sentences:
-        words = sentence.split()
-        if len(words) > 2:
-            idx1, idx2 = random.sample(range(len(words)), 2)
-            words[idx1], words[idx2] = words[idx2], words[idx1]
-        modified_sentences.append(' '.join(words))
-
-    return ' '.join(modified_sentences)
-
 def post_process(text):
     text = re.sub(r'\s+([.,!?])', r'\1', text)
     text = re.sub(r'\s+', ' ', text)
@@ -88,7 +85,6 @@ def main():
             return min(freq / 100, 0.5)
 
         modified_text = replace_with_synonyms(text, replacement_prob)
-        modified_text = vary_word_order(modified_text)
         modified_text = post_process(modified_text)
 
         with open(args.output_file, 'w') as file:

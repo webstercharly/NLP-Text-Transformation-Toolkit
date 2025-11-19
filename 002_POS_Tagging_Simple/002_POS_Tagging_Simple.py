@@ -3,15 +3,23 @@ import random
 import requests
 import multiprocessing
 import re
-from functools import lru_cache
 import nltk
 from nltk.corpus import wordnet
 
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('wordnet')
+# Download NLTK data with quiet flag to avoid multiprocessing conflicts
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
+try:
+    nltk.data.find('taggers/averaged_perceptron_tagger')
+except LookupError:
+    nltk.download('averaged_perceptron_tagger', quiet=True)
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet', quiet=True)
 
-@lru_cache(maxsize=1000)
 def get_synonyms(word, pos):
     synonyms = []
     for syn in wordnet.synsets(word):

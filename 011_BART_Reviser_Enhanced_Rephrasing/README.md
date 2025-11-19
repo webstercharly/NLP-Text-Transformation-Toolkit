@@ -1,4 +1,11 @@
-# 011_BART_Reviser_Enhanced_Rephrasing:
+# 011_BART_Reviser_Enhanced_Rephrasing
+
+![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Status](https://img.shields.io/badge/status-active-success.svg)
+![Transformers](https://img.shields.io/badge/transformers-4.0+-orange.svg)
+
+## Features
 - Fine-tune the BART model using custom markdown files
 - Sentence Transformers to compute and compare the semantic similarity between the original and the rephrased sentences
 - Incorporates LanguageTool for automatic detection and correction of grammatical errors and spelling mistakes
